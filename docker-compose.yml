@@ -1,4 +1,4 @@
-version: '2.1'
+version: '3.8'
 
 networks:
   monitor-net:
@@ -11,7 +11,7 @@ volumes:
 services:
 
   prometheus:
-    image: prom/prometheus:v2.17.1
+    image: prom/prometheus:v2.40.3
     container_name: prometheus
     volumes:
       - ./prometheus:/etc/prometheus
@@ -26,29 +26,15 @@ services:
     restart: unless-stopped
     expose:
       - 9090
-    networks:
-      - monitor-net
-    labels:
-      org.label-schema.group: "monitoring"
-
-  alertmanager:
-    image: prom/alertmanager:v0.20.0
-    container_name: alertmanager
-    volumes:
-      - ./alertmanager:/etc/alertmanager
-    command:
-      - '--config.file=/etc/alertmanager/config.yml'
-      - '--storage.path=/alertmanager'
-    restart: unless-stopped
-    expose:
-      - 9093
+    ports:
+      - "9090:9090"
     networks:
       - monitor-net
     labels:
       org.label-schema.group: "monitoring"
 
   nodeexporter:
-    image: prom/node-exporter:v0.18.1
+    image: prom/node-exporter:v1.4.0
     container_name: nodeexporter
     volumes:
       - /proc:/host/proc:ro
@@ -68,7 +54,7 @@ services:
       org.label-schema.group: "monitoring"
 
   cadvisor:
-    image: gcr.io/google-containers/cadvisor:v0.34.0
+    image: gcr.io/cadvisor/cadvisor:v0.46.0
     container_name: cadvisor
     volumes:
       - /:/rootfs:ro
@@ -85,7 +71,7 @@ services:
       org.label-schema.group: "monitoring"
 
   grafana:
-    image: grafana/grafana:6.7.2
+    image: grafana/grafana:9.2.6
     container_name: grafana
     volumes:
       - grafana_data:/var/lib/grafana
@@ -97,36 +83,8 @@ services:
     restart: unless-stopped
     expose:
       - 3000
-    networks:
-      - monitor-net
-    labels:
-      org.label-schema.group: "monitoring"
-
-  pushgateway:
-    image: prom/pushgateway:v1.2.0
-    container_name: pushgateway
-    restart: unless-stopped
-    expose:
-      - 9091
-    networks:
-      - monitor-net
-    labels:
-      org.label-schema.group: "monitoring"
-
-  caddy:
-    image: stefanprodan/caddy
-    container_name: caddy
     ports:
       - "3000:3000"
-      - "9090:9090"
-      - "9093:9093"
-      - "9091:9091"
-    volumes:
-      - ./caddy:/etc/caddy
-    environment:
-      - ADMIN_USER=${ADMIN_USER}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-    restart: unless-stopped
     networks:
       - monitor-net
     labels:
